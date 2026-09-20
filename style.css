@@ -1,0 +1,230 @@
+/* ==========================================================
+   GALAXIA DE AMOR — estilos
+   Unidad base --u = 1% del lado menor de la pantalla.
+   Todo el tamaño se expresa en "u", así la galaxia es un
+   disco perfectamente circular en cualquier dispositivo.
+   ========================================================== */
+
+:root {
+  --u: min(1vw, 1vh);
+  --gold: #ffd23a;
+  --gold-deep: #f4a300;
+  --art: 1;    /* escala extra de girasoles/ramos */
+  --txt: 1;    /* escala extra de frases */
+  --rot: 0deg; /* ángulo de la órbita (lo actualiza script.js) */
+}
+@supports (height: 100dvh) {
+  :root { --u: min(1vw, 1dvh); }
+}
+/* Pantallas verticales (celulares): agranda un poco los elementos */
+@media (max-aspect-ratio: 1/1) {
+  :root { --art: 1.25; --txt: 1.12; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;            /* sin barras de desplazamiento */
+  overscroll-behavior: none;   /* evita rebote / pull-to-refresh */
+  background: #000;
+  -webkit-tap-highlight-color: transparent;
+}
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------- Contenedor interactivo ---------- */
+#galaxy-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;          /* el scroll de la página no interfiere con el gesto */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+  background:
+    radial-gradient(55% 45% at 8% 4%, rgba(255, 205, 0, .17), transparent 65%),
+    radial-gradient(60% 50% at 50% 52%, rgba(255, 185, 0, .10), transparent 70%),
+    radial-gradient(45% 40% at 95% 100%, rgba(255, 190, 0, .12), transparent 70%),
+    #000;
+}
+#galaxy-container.dragging { cursor: grabbing; }
+
+#fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* ---------- Órbita giratoria ----------
+   Tiene tamaño 0 y su origen queda exactamente en el centro
+   de la pantalla; rotarla gira todo su contenido alrededor del núcleo. */
+#galaxy-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--rot));
+  will-change: transform;
+}
+
+.item { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+
+/* .upright contrarresta la rotación para que textos y flores queden derechos.
+   Se activa con la clase .keep-upright (ver CFG.keepUpright en script.js). */
+.upright {
+  position: absolute;
+  left: 0; top: 0;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+#galaxy-orbit.keep-upright .upright {
+  transform: translate(-50%, -50%) rotate(calc(var(--rot) * -1));
+}
+
+/* Flotación sutil e independiente de cada elemento */
+.float {
+  animation: float var(--d, 7s) ease-in-out var(--del, 0s) infinite;
+  will-change: transform;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(calc(var(--u) * -1.1)) rotate(2deg); }
+}
+
+/* Girasoles y ramos */
+.art { position: relative; width: calc(var(--u) * var(--art) * var(--w)); }
+.art::before {                     /* halo dorado detrás */
+  content: "";
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 200, 40, .38), rgba(255, 170, 0, .12) 45%, transparent 70%);
+  animation: halo 4.5s ease-in-out var(--del, 0s) infinite;
+  pointer-events: none;
+}
+@keyframes halo { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.art svg, .art img { position: relative; display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; }
+
+/* Frases */
+.phrase {
+  display: block;
+  white-space: nowrap;
+  font-family: 'Caveat', 'Segoe Script', 'Bradley Hand', 'Comic Sans MS', cursive;
+  font-weight: 700;
+  font-size: calc(var(--u) * var(--txt) * var(--fs));
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 0 calc(var(--u) * .5) rgba(255, 236, 160, .95),
+               0 0 calc(var(--u) * 1.6) rgba(255, 190, 20, .75),
+               0 0 calc(var(--u) * 3.4) rgba(255, 150, 0, .45);
+  animation: glow 3.8s ease-in-out var(--del, 0s) infinite;
+}
+@keyframes glow { 0%, 100% { opacity: .82; } 50% { opacity: 1; } }
+
+/* ---------- Núcleo fijo ---------- */
+#galaxy-core {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 0; height: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+#galaxy-core .glow,
+#galaxy-core .ring,
+#galaxy-core .nucleus {
+  position: absolute;
+  border-radius: 50%;
+  width: var(--d); height: var(--d);
+  left: calc(var(--d) / -2); top: calc(var(--d) / -2);
+}
+.glow {
+  --d: calc(var(--u) * 78);
+  background: radial-gradient(circle, rgba(255, 214, 80, .75) 0%, rgba(255, 178, 0, .28) 28%, rgba(255, 150, 0, .07) 52%, transparent 68%);
+  animation: breathe 5s ease-in-out infinite;
+}
+@keyframes breathe { 0%, 100% { transform: scale(.94); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
+
+.nucleus {
+  --d: calc(var(--u) * 5);
+  background: radial-gradient(circle, #fff 0%, #fff4b8 30%, #ffd23a 60%, transparent 72%);
+  box-shadow: 0 0 calc(var(--u) * 3) calc(var(--u) * 1) rgba(255, 220, 90, .9),
+              0 0 calc(var(--u) * 9) calc(var(--u) * 3) rgba(255, 170, 0, .55);
+  animation: beat 2.6s ease-in-out infinite;
+}
+@keyframes beat { 0%, 100% { transform: scale(.9); } 50% { transform: scale(1.18); } }
+
+/* Anillos en espiral (degradado cónico recortado como aro) */
+.ring.spiral::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 8%, rgba(255, 190, 20, .5) 35%, #ffd23a 62%, #fff6c4 78%, transparent 80% 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--th)), #000 calc(100% - var(--th) + 1px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - var(--th)), #000 calc(100% - var(--th) + 1px));
+  filter: drop-shadow(0 0 calc(var(--u) * .8) rgba(255, 190, 0, .9));
+}
+.ring.spiral { animation: spin var(--t) linear infinite; }
+.s1 { --d: calc(var(--u) * 13); --th: calc(var(--u) * .7); --t: 6s; }
+.s2 { --d: calc(var(--u) * 22); --th: calc(var(--u) * .45); --t: 11s; animation-direction: reverse; }
+.s3 { --d: calc(var(--u) * 34); --th: calc(var(--u) * .3); --t: 19s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ring.line {
+  border: calc(var(--u) * .18) solid rgba(255, 214, 90, .35);
+  box-shadow: 0 0 calc(var(--u) * 1.2) rgba(255, 190, 0, .35), inset 0 0 calc(var(--u) * 1.2) rgba(255, 190, 0, .2);
+}
+.l1 { --d: calc(var(--u) * 17); }
+.l2 { --d: calc(var(--u) * 28); border-color: rgba(255, 214, 90, .2); }
+
+/* Ondas de luz que salen del núcleo */
+.ring.wave {
+  --d: calc(var(--u) * 12);
+  border: calc(var(--u) * .3) solid rgba(255, 224, 110, .8);
+  box-shadow: 0 0 calc(var(--u) * 1.5) rgba(255, 190, 0, .7);
+  opacity: 0;
+  animation: wave 5.4s cubic-bezier(.2, .6, .3, 1) infinite;
+}
+.w2 { animation-delay: 1.8s; }
+.w3 { animation-delay: 3.6s; }
+@keyframes wave {
+  0%   { transform: scale(.35); opacity: .9; }
+  100% { transform: scale(4.6); opacity: 0; }
+}
+
+/* ---------- Textos fijos ---------- */
+.hud { position: absolute; inset: 0; pointer-events: none; }
+.heart-text, .title, .hint { position: absolute; left: 50%; margin: 0; transform: translateX(-50%); white-space: nowrap; text-align: center; }
+
+.heart-text {
+  top: calc(50% - var(--u) * 28);
+  font-family: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
+  font-weight: 700;
+  font-size: calc(var(--u) * var(--txt) * 5);
+  color: #fff;
+  text-shadow: 0 0 calc(var(--u) * .6) #fff2b0, 0 0 calc(var(--u) * 2) rgba(255, 190, 0, .9), 0 0 calc(var(--u) * 4.5) rgba(255, 150, 0, .6);
+  animation: glow 3.2s ease-in-out infinite;
+}
+.title {
+  top: calc(50% + var(--u) * 24);
+  font-family: 'Dancing Script', 'Segoe Script', 'Brush Script MT', cursive;
+  font-weight: 700;
+  font-size: calc(var(--u) * var(--txt) * 8);
+  letter-spacing: .01em;
+  color: #fff;
+  text-shadow: 0 0 calc(var(--u) * .7) #fff6c8, 0 0 calc(var(--u) * 2.2) rgba(255, 200, 30, .95), 0 0 calc(var(--u) * 5) rgba(255, 150, 0, .65);
+  animation: glow 4s ease-in-out infinite;
+}
+.hint {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 2.5vh);
+  font: 500 clamp(12px, 1.6vmin, 15px) system-ui, sans-serif;
+  color: rgba(255, 230, 150, .75);
+  letter-spacing: .04em;
+  transition: opacity 1s ease;
+  animation: glow 3s ease-in-out infinite;
+}
+.hint.hidden { opacity: 0 !important; animation: none; }
+
+/* Respeta la preferencia de menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .float, .art::before, .phrase, .glow, .nucleus, .ring, .heart-text, .title, .hint { animation: none !important; }
+  .ring.wave { opacity: .25; }
+}
